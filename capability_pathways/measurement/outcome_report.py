@@ -47,22 +47,31 @@ def write_rules(path: Path, decisions: Mapping[str, Decision]) -> int:
     return count
 
 
-def build_summary(records: list[DomainRecord], decisions: Mapping[str, Decision], snapshot: Mapping[str, Any]) -> dict[str, Any]:
+def build_summary(records: list[DomainRecord], decisions: Mapping[str, Decision], snapshot: Mapping[str, Any],
+                  comparison: Mapping[str, Any] | None = None,
+                  plan: Mapping[str, Any] | None = None) -> dict[str, Any]:
     outcomes: dict[str, int] = {}
     for decision in decisions.values():
         outcomes[decision.outcome] = outcomes.get(decision.outcome, 0) + 1
     scores = [decision.score for decision in decisions.values()]
-    return {"product": '人工智能能力建设路径与成果归因平台', "entity": 'institution_pathway', "generated_at": utc_now(),
-            "record_count": len(records), "decision_count": len(decisions), "outcomes": outcomes,
-            "average_score": sum(scores) / len(scores) if scores else 0.0,
-            "minimum_score": min(scores) if scores else 0.0, "maximum_score": max(scores) if scores else 0.0,
-            "repository": snapshot}
+    summary = {"product": '人工智能能力建设路径与成果归因平台', "entity": 'institution_pathway', "generated_at": utc_now(),
+               "record_count": len(records), "decision_count": len(decisions), "outcomes": outcomes,
+               "average_score": sum(scores) / len(scores) if scores else 0.0,
+               "minimum_score": min(scores) if scores else 0.0, "maximum_score": max(scores) if scores else 0.0,
+               "repository": snapshot}
+    if comparison is not None:
+        summary["staged_comparison"] = comparison
+    if plan is not None:
+        summary["expansion_plan"] = plan
+    return summary
 
 
 def export_bundle(output: str | Path, records: list[DomainRecord], decisions: Mapping[str, Decision],
-                  snapshot: Mapping[str, Any], events: list[dict[str, Any]]) -> dict[str, Any]:
+                  snapshot: Mapping[str, Any], events: list[dict[str, Any]],
+                  comparison: Mapping[str, Any] | None = None,
+                  plan: Mapping[str, Any] | None = None) -> dict[str, Any]:
     root = ensure_output(output)
-    summary = build_summary(records, decisions, snapshot)
+    summary = build_summary(records, decisions, snapshot, comparison, plan)
     record_count = write_records(root / "records.csv", records, decisions)
     rule_count = write_rules(root / "rules.csv", decisions)
     summary_hash = write_json(root / "summary.json", summary)

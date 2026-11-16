@@ -60,10 +60,35 @@ CREATE TABLE IF NOT EXISTS runs(
     started_at TEXT NOT NULL,
     finished_at TEXT
 );
+CREATE TABLE IF NOT EXISTS comparisons(
+    comparison_id TEXT PRIMARY KEY,
+    input_fingerprint TEXT NOT NULL,
+    report_hash TEXT NOT NULL,
+    report_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS expansion_plans(
+    plan_id TEXT PRIMARY KEY,
+    comparison_fingerprint TEXT NOT NULL,
+    input_fingerprint TEXT NOT NULL,
+    status TEXT NOT NULL,
+    plan_hash TEXT NOT NULL,
+    plan_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS programme_resources(
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    payload_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 CREATE INDEX IF NOT EXISTS idx_records_state ON records(state, updated_at);
 CREATE INDEX IF NOT EXISTS idx_events_aggregate ON events(aggregate_id, event_id);
 CREATE INDEX IF NOT EXISTS idx_decisions_record ON decisions(record_id, decided_at);
+CREATE INDEX IF NOT EXISTS idx_plans_status ON expansion_plans(status, updated_at);
 """
+
+PLAN_STATUSES = ("draft", "adopted", "superseded", "stale")
 
 
 class Repository:
@@ -230,12 +255,27 @@ class Repository:
             previous = row["event_hash"]
         return errors
 
+    def analysis_errors(self) -> list[str]:
+        errors: list[str] = []
+        with self.connect() as connection:
+            for row in connection.execute("SELECT comparison_id,report_hash,report_json FROM comparisons"):
+                if stable_hash(json.loads(row["report_json"])) != row["report_hash"]:
+                    errors.append(f"comparison {row['comparison_id']} hash mismatch")
+            for row in connection.execute("SELECT plan_id,plan_hash,plan_json FROM expansion_plans"):
+                if stable_hash(json.loads(row["plan_json"])) != row["plan_hash"]:
+                    errors.append(f"plan {row['plan_id']} hash mismatch")
+                if row["plan_id"] != json.loads(row["plan_json"]).get("plan_id"):
+                    errors.append(f"plan {row['plan_id']} identifier mismatch")
+        return errors
+
     def snapshot(self) -> dict[str, Any]:
         with self.connect() as connection:
             counts = {table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-                      for table in ("records", "record_versions", "decisions", "events", "runs")}
+                      for table in ("records", "record_versions", "decisions", "events", "runs",
+                                    "comparisons", "expansion_plans")}
             states = {row[0]: row[1] for row in connection.execute("SELECT state,COUNT(*) FROM records GROUP BY state")}
-        return {"counts": counts, "states": states, "chain_errors": self.verify_chain()}
+            plan_states = {row[0]: row[1] for row in connection.execute("SELECT status,COUNT(*) FROM expansion_plans GROUP BY status")}
+        return {"counts": counts, "states": states, "plan_states": plan_states, "chain_errors": self.verify_chain()}
 
     def decision_rows(self) -> list[dict[str, Any]]:
         with self.connect() as connection:
@@ -246,3 +286,138 @@ class Repository:
         with self.connect() as connection:
             rows = connection.execute("SELECT * FROM events ORDER BY event_id").fetchall()
         return [dict(row) | {"payload": json.loads(row["payload_json"])} for row in rows]
+
+    def save_comparison(self, report: Mapping[str, Any]) -> str:
+        comparison_id = report["input_fingerprint"]
+        body = canonical_json(report)
+        report_hash = stable_hash(report)
+        with self.transaction() as connection:
+            current = connection.execute("SELECT report_hash FROM comparisons WHERE comparison_id=?",
+                                         (comparison_id,)).fetchone()
+            if current and current[0] == report_hash:
+                return comparison_id
+            connection.execute("INSERT OR REPLACE INTO comparisons(comparison_id,input_fingerprint,report_hash,report_json,created_at) VALUES(?,?,?,?,?)",
+                               (comparison_id, comparison_id, report_hash, body, utc_now()))
+            count = connection.execute("SELECT COUNT(*) FROM events WHERE aggregate_id=?", (comparison_id,)).fetchone()[0]
+            self.append_event(connection, "comparison.saved", comparison_id, count + 1,
+                              {"comparison_id": comparison_id, "report_hash": report_hash})
+        return comparison_id
+
+    def latest_comparison(self) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute("SELECT report_json FROM comparisons ORDER BY created_at DESC, rowid DESC LIMIT 1").fetchone()
+        return json.loads(row[0]) if row else None
+
+    def get_comparison(self, comparison_id: str) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute("SELECT report_json FROM comparisons WHERE comparison_id=?",
+                                     (comparison_id,)).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def save_plan(self, plan: Mapping[str, Any]) -> str:
+        plan_id = plan["plan_id"]
+        body = canonical_json(plan)
+        plan_hash = stable_hash(plan)
+        now = utc_now()
+        with self.transaction() as connection:
+            row = connection.execute("SELECT plan_hash,status FROM expansion_plans WHERE plan_id=?", (plan_id,)).fetchone()
+            if row and row[0] == plan_hash:
+                return plan_id
+            status = "draft" if row is None else row[1]
+            if status == "superseded":
+                status = "draft"
+            connection.execute("INSERT INTO expansion_plans(plan_id,comparison_fingerprint,input_fingerprint,status,plan_hash,plan_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(plan_id) DO UPDATE SET comparison_fingerprint=excluded.comparison_fingerprint,input_fingerprint=excluded.input_fingerprint,status=excluded.status,plan_hash=excluded.plan_hash,plan_json=excluded.plan_json,updated_at=excluded.updated_at",
+                               (plan_id, plan["comparison_fingerprint"], plan["input_fingerprint"], status,
+                                plan_hash, body, now, now))
+            count = connection.execute("SELECT COUNT(*) FROM events WHERE aggregate_id=?", (plan_id,)).fetchone()[0]
+            self.append_event(connection, "plan.saved", plan_id, count + 1,
+                              {"plan_id": plan_id, "plan_hash": plan_hash, "status": status})
+        return plan_id
+
+    def set_plan_status(self, plan_id: str, status: str) -> dict[str, Any]:
+        if status not in PLAN_STATUSES:
+            raise ContractError("unsupported plan status")
+        with self.transaction() as connection:
+            row = connection.execute("SELECT status,plan_json FROM expansion_plans WHERE plan_id=?", (plan_id,)).fetchone()
+            if row is None:
+                raise ContractError("unknown expansion plan")
+            if status == "adopted" and row[0] != "draft":
+                raise ContractError("only a current draft plan can be adopted")
+            plan = json.loads(row[1])
+            plan["status"] = status
+            connection.execute("UPDATE expansion_plans SET status=?,plan_hash=?,plan_json=?,updated_at=? WHERE plan_id=?",
+                               (status, stable_hash(plan), canonical_json(plan), utc_now(), plan_id))
+            count = connection.execute("SELECT COUNT(*) FROM events WHERE aggregate_id=?", (plan_id,)).fetchone()[0]
+            self.append_event(connection, "plan.status", plan_id, count + 1,
+                              {"plan_id": plan_id, "status": status})
+        return plan
+
+    def plan_rows(self, status: str | None = None) -> list[dict[str, Any]]:
+        query = "SELECT plan_json,status FROM expansion_plans"
+        params: tuple[Any, ...] = ()
+        if status:
+            query += " WHERE status=?"
+            params = (status,)
+        query += " ORDER BY created_at, plan_id"
+        with self.connect() as connection:
+            rows = connection.execute(query, params).fetchall()
+        return [json.loads(row[0]) | {"status": row[1]} for row in rows]
+
+    def get_plan(self, plan_id: str) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute("SELECT plan_json,status FROM expansion_plans WHERE plan_id=?",
+                                     (plan_id,)).fetchone()
+        return (json.loads(row[0]) | {"status": row[1]}) if row else None
+
+    def mark_plans_stale(self, input_fingerprint: str | None) -> list[str]:
+        """Flag unfinished plans whose inputs no longer match the current evidence/resources.
+
+        ``None`` means every draft or adopted plan is out of date, used when a record is
+        corrected before the replacement comparison is produced.
+        """
+        with self.transaction() as connection:
+            if input_fingerprint is None:
+                rows = connection.execute("SELECT plan_id,status FROM expansion_plans").fetchall()
+            else:
+                rows = connection.execute("SELECT plan_id,status FROM expansion_plans WHERE input_fingerprint!=?",
+                                          (input_fingerprint,)).fetchall()
+            changed: list[str] = []
+            for plan_id, status in rows:
+                if status != "draft":
+                    continue
+                connection.execute("UPDATE expansion_plans SET status='stale',updated_at=? WHERE plan_id=?",
+                                   (utc_now(), plan_id))
+                count = connection.execute("SELECT COUNT(*) FROM events WHERE aggregate_id=?", (plan_id,)).fetchone()[0]
+                self.append_event(connection, "plan.status", plan_id, count + 1,
+                                  {"plan_id": plan_id, "status": "stale"})
+                changed.append(plan_id)
+        return changed
+
+    def supersede_drafts(self, keep_plan_id: str) -> list[str]:
+        """Mark older still-open plans as replaced once a plan is adopted."""
+        with self.transaction() as connection:
+            rows = connection.execute(
+                "SELECT plan_id FROM expansion_plans WHERE status IN ('draft','adopted','stale') AND plan_id!=?",
+                (keep_plan_id,)).fetchall()
+            for (plan_id,) in rows:
+                connection.execute("UPDATE expansion_plans SET status='superseded',updated_at=? WHERE plan_id=?",
+                                   (utc_now(), plan_id))
+                count = connection.execute("SELECT COUNT(*) FROM events WHERE aggregate_id=?", (plan_id,)).fetchone()[0]
+                self.append_event(connection, "plan.status", plan_id, count + 1,
+                                  {"plan_id": plan_id, "status": "superseded", "superseded_by": keep_plan_id})
+        return [row[0] for row in rows]
+
+    def save_resources(self, resources: Mapping[str, Any]) -> dict[str, Any]:
+        body = canonical_json(dict(resources))
+        with self.transaction() as connection:
+            connection.execute("INSERT INTO programme_resources(id,payload_json,updated_at) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET payload_json=excluded.payload_json,updated_at=excluded.updated_at",
+                               (body, utc_now()))
+            count = connection.execute("SELECT COUNT(*) FROM events WHERE aggregate_id=?", ("programme_resources",)).fetchone()[0]
+            self.append_event(connection, "resources.saved", "programme_resources", count + 1,
+                              {"resources": dict(resources)})
+        return dict(resources)
+
+    def resources(self) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute("SELECT payload_json FROM programme_resources WHERE id=1").fetchone()
+        return json.loads(row[0]) if row else {}

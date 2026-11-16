@@ -1,0 +1,206 @@
+{
+  "scenario": "分阶段扩容比较样本",
+  "synthetic": true,
+  "records": [
+    {
+      "record_id": "stage-cohort-a-01",
+      "payload": {
+        "institution_id": "alpha-institute",
+        "country_group": "group-a",
+        "capability_track": "track-foundation",
+        "staff_count": 18,
+        "staff_hours": 420,
+        "baseline_level": 40.0,
+        "target_level": 45.0,
+        "profile_missing_rate": 0.08,
+        "mentor_capacity": 0.62,
+        "compute_access": 0.58,
+        "language_support": "zh",
+        "participation_consent": 0.90,
+        "completion_status": "completed",
+        "activated_at": "2026-01-05T00:00:00+00:00",
+        "measured_at": "2026-06-15T00:00:00+00:00",
+        "attrition_rate": 0.10
+      },
+      "state": "measured",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-a-02",
+      "payload": {
+        "institution_id": "beta-institute",
+        "country_group": "group-a",
+        "capability_track": "track-foundation",
+        "staff_count": 16,
+        "staff_hours": 380,
+        "baseline_level": 42.0,
+        "target_level": 46.0,
+        "profile_missing_rate": 0.10,
+        "mentor_capacity": 0.55,
+        "compute_access": 0.52,
+        "language_support": "zh",
+        "participation_consent": 0.88,
+        "completion_status": "completed",
+        "activated_at": "2026-01-12T00:00:00+00:00",
+        "measured_at": "2026-06-20T00:00:00+00:00",
+        "attrition_rate": 0.14
+      },
+      "state": "measured",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-a-03",
+      "payload": {
+        "institution_id": "gamma-institute",
+        "country_group": "group-b",
+        "capability_track": "track-foundation",
+        "staff_count": 20,
+        "staff_hours": 460,
+        "baseline_level": 41.0,
+        "target_level": 45.5,
+        "profile_missing_rate": 0.12,
+        "mentor_capacity": 0.58,
+        "compute_access": 0.60,
+        "language_support": "en",
+        "participation_consent": 0.86,
+        "completion_status": "completed",
+        "activated_at": "2026-02-01T00:00:00+00:00",
+        "measured_at": "2026-07-10T00:00:00+00:00",
+        "attrition_rate": 0.12
+      },
+      "state": "measured",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-b-01",
+      "payload": {
+        "institution_id": "delta-institute",
+        "country_group": "group-c",
+        "capability_track": "track-foundation",
+        "staff_count": 24,
+        "staff_hours": 0,
+        "baseline_level": 43.0,
+        "target_level": 49.0,
+        "profile_missing_rate": 0.30,
+        "mentor_capacity": 0.40,
+        "compute_access": 0.35,
+        "language_support": "zh",
+        "participation_consent": 0.70,
+        "completion_status": "awaiting"
+      },
+      "state": "planned",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-b-02",
+      "payload": {
+        "institution_id": "epsilon-institute",
+        "country_group": "group-c",
+        "capability_track": "track-foundation",
+        "staff_count": 21,
+        "staff_hours": 0,
+        "baseline_level": 28.0,
+        "target_level": 36.0,
+        "profile_missing_rate": 0.55,
+        "mentor_capacity": 0.30,
+        "compute_access": 0.25,
+        "language_support": "en",
+        "participation_consent": 0.60,
+        "completion_status": "awaiting"
+      },
+      "state": "planned",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-c-01",
+      "payload": {
+        "institution_id": "zeta-institute",
+        "country_group": "group-d",
+        "capability_track": "track-foundation",
+        "staff_count": 15,
+        "staff_hours": 300,
+        "baseline_level": 39.0,
+        "target_level": 43.0,
+        "profile_missing_rate": 0.20,
+        "mentor_capacity": 0.50,
+        "compute_access": 0.45,
+        "language_support": "zh",
+        "participation_consent": 0.80,
+        "completion_status": "completed",
+        "activated_at": "2026-01-20T00:00:00+00:00",
+        "measured_at": "2026-05-30T00:00:00+00:00",
+        "attrition_rate": 0.55
+      },
+      "state": "measured",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-c-02",
+      "payload": {
+        "institution_id": "eta-institute",
+        "country_group": "group-d",
+        "capability_track": "track-advanced",
+        "staff_count": 19,
+        "staff_hours": 350,
+        "baseline_level": 70.0,
+        "target_level": 74.0,
+        "profile_missing_rate": 0.06,
+        "mentor_capacity": 0.66,
+        "compute_access": 0.62,
+        "language_support": "zh",
+        "participation_consent": 0.92,
+        "completion_status": "completed",
+        "activated_at": "2026-03-01T00:00:00+00:00",
+        "measured_at": "2026-05-01T00:00:00+00:00",
+        "attrition_rate": 0.05
+      },
+      "state": "measured",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-c-03",
+      "payload": {
+        "institution_id": "theta-institute",
+        "country_group": "group-d",
+        "capability_track": "track-foundation",
+        "staff_count": 12,
+        "staff_hours": 200,
+        "baseline_level": 41.0,
+        "target_level": 46.0,
+        "profile_missing_rate": 0.09,
+        "mentor_capacity": 0.60,
+        "compute_access": 0.56,
+        "language_support": "zh",
+        "participation_consent": 0.84,
+        "completion_status": "withdrawn",
+        "withdrawn_at": "2026-03-15T00:00:00+00:00",
+        "attrition_rate": 1.0
+      },
+      "state": "measured",
+      "source": "synthetic-staged"
+    },
+    {
+      "record_id": "stage-cohort-d-01",
+      "payload": {
+        "institution_id": "iota-institute",
+        "country_group": "group-e",
+        "capability_track": "track-foundation",
+        "staff_count": 22,
+        "staff_hours": 400,
+        "baseline_level": 40.5,
+        "target_level": 44.0,
+        "profile_missing_rate": 0.15,
+        "mentor_capacity": 0.54,
+        "compute_access": 0.50,
+        "language_support": "zh",
+        "participation_consent": 0.82,
+        "completion_status": "completed",
+        "activated_at": "2026-02-10T00:00:00+00:00",
+        "measured_at": "2026-04-10T00:00:00+00:00",
+        "attrition_rate": 0.18
+      },
+      "state": "measured",
+      "source": "synthetic-staged"
+    }
+  ]
+}
