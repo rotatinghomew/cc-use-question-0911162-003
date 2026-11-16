@@ -1,0 +1,158 @@
+{
+  "scenario": "人工智能能力建设路径与成果归因平台",
+  "synthetic": true,
+  "records": [
+    {
+      "record_id": "institution_pathway-001",
+      "payload": {
+        "institution_id": "institution_id-0",
+        "country_group": "country_group-1",
+        "capability_track": "capability_track-2",
+        "staff_count": 17.7,
+        "staff_hours": 19.6,
+        "baseline_level": 21.5,
+        "target_level": 23.4,
+        "profile_missing_rate": 0.25,
+        "mentor_capacity": 0.36,
+        "compute_access": 0.47,
+        "language_support": "language_support-0",
+        "participation_consent": 0.69
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "institution_pathway-002",
+      "payload": {
+        "institution_id": "institution_id-1",
+        "country_group": "country_group-2",
+        "capability_track": "capability_track-3",
+        "staff_count": 21.4,
+        "staff_hours": 23.3,
+        "baseline_level": 25.2,
+        "target_level": 27.1,
+        "profile_missing_rate": 0.36,
+        "mentor_capacity": 0.47,
+        "compute_access": 0.58,
+        "language_support": "language_support-1",
+        "participation_consent": 0.8
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "institution_pathway-003",
+      "payload": {
+        "institution_id": "institution_id-2",
+        "country_group": "country_group-3",
+        "capability_track": "capability_track-4",
+        "staff_count": 25.1,
+        "staff_hours": 27.0,
+        "baseline_level": 28.9,
+        "target_level": 30.8,
+        "profile_missing_rate": 0.47,
+        "mentor_capacity": 0.58,
+        "compute_access": 0.69,
+        "language_support": "language_support-2",
+        "participation_consent": 0.91
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "institution_pathway-004",
+      "payload": {
+        "institution_id": "institution_id-3",
+        "country_group": "country_group-4",
+        "capability_track": "capability_track-0",
+        "staff_count": 28.8,
+        "staff_hours": 30.7,
+        "baseline_level": 32.6,
+        "target_level": 34.5,
+        "profile_missing_rate": 0.58,
+        "mentor_capacity": 0.69,
+        "compute_access": 0.8,
+        "language_support": "language_support-3",
+        "participation_consent": 0.25
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "institution_pathway-005",
+      "payload": {
+        "institution_id": "institution_id-4",
+        "country_group": "country_group-0",
+        "capability_track": "capability_track-1",
+        "staff_count": 32.5,
+        "staff_hours": 34.4,
+        "baseline_level": 36.3,
+        "target_level": 38.2,
+        "profile_missing_rate": 0.69,
+        "mentor_capacity": 0.8,
+        "compute_access": 0.91,
+        "language_support": "language_support-4",
+        "participation_consent": 0.36
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "institution_pathway-006",
+      "payload": {
+        "institution_id": "institution_id-0",
+        "country_group": "country_group-1",
+        "capability_track": "capability_track-2",
+        "staff_count": 36.2,
+        "staff_hours": 38.1,
+        "baseline_level": 40.0,
+        "target_level": 41.9,
+        "profile_missing_rate": 0.8,
+        "mentor_capacity": 0.91,
+        "compute_access": 0.25,
+        "language_support": "language_support-0",
+        "participation_consent": 0.47
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "institution_pathway-007",
+      "payload": {
+        "institution_id": "institution_id-1",
+        "country_group": "country_group-2",
+        "capability_track": "capability_track-3",
+        "staff_count": 39.9,
+        "staff_hours": 41.8,
+        "baseline_level": 43.7,
+        "target_level": 45.6,
+        "profile_missing_rate": 0.91,
+        "mentor_capacity": 0.25,
+        "compute_access": 0.36,
+        "language_support": "language_support-1",
+        "participation_consent": 0.58
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    },
+    {
+      "record_id": "institution_pathway-008",
+      "payload": {
+        "institution_id": "institution_id-2",
+        "country_group": "country_group-3",
+        "capability_track": "capability_track-4",
+        "staff_count": 43.6,
+        "staff_hours": 45.5,
+        "baseline_level": 47.4,
+        "target_level": 49.3,
+        "profile_missing_rate": 0.25,
+        "mentor_capacity": 0.36,
+        "compute_access": 0.47,
+        "language_support": "language_support-2",
+        "participation_consent": 0.69
+      },
+      "state": "profiled",
+      "source": "synthetic-local-acceptance"
+    }
+  ]
+}
